@@ -1,3 +1,6 @@
+import json
+import pandas as pd
+
 # EXAMPLE: Read in data from file
 # import pandas as pd
 
@@ -18,81 +21,153 @@
 # ????
 
 ###
-### LOOK AT THE OVERALL CONSTRAINTS IN THE README
+# LOOK AT THE OVERALL CONSTRAINTS IN THE README
 ###
 
-import pandas as pd
+# class Pool:
+#     def __init__(maturity_date: int, loan_term: int, curr_states, loans_in_pool = []) -> None:
+#         # [pool_class, maturity date, loan term, curr balance, curr state %, loans in pool, property type*]
+#         # curr states can be an array of ints? MA/len(loans_in_pool) => pct
+#         self.maturity_date = maturity_date
+#         self.loan_term = loan_term
+#         self.curr_state_pct = curr_state_pct
+#         self.loans_in_pool = loans_in_pool
 
-import numpy as np
-
-def multiple_knapsack(weights, profits, capacities):
-    n = len(weights) # number of items
-    m = len(capacities) # number of knapsacks
-    
-    # Initialize solution vector
-    x = np.zeros((n, m), dtype=int)
-    z = 0 # objective value
-    
-    # Sort items by non-increasing weight-to-profit ratio
-    ratios = profits / weights
-    indices = np.argsort(-ratios)
-    
-    # Assign items to knapsacks using a greedy approach
-    for j in indices:
-        i = np.argmax(capacities >= weights[j])
-        if i != m:
-            x[j, i] = 1
-            z += profits[j]
-            capacities[i] -= weights[j]
-    
-    # Improve solution using a branch-and-bound approach
-    def branch_and_bound(h, P, W, c):
-        nonlocal x, z
-        
-        # Solve relaxed problem
-        u = (profits @ x.sum(axis=1)).max()
-        if P <= u:
-            return
-        
-        # Check if solution is feasible
-        if (c >= weights.sum(axis=0)).all():
-            x_best = x.copy()
-            z = P
-            return
-        
-        # Choose branching item with largest profit-to-weight ratio
-        j = np.argmax(profits / weights * (x.sum(axis=1) < c))
-        for i in range(m):
-            if capacities[i] < weights[j]:
-                continue
-            x[j, i] = 1
-            capacities[i] -= weights[j]
-            branch_and_bound(h+1, (P-profits[j]), (W-weights[j]), capacities)
-            x[j, i] = 0
-            capacities[i] += weights[j]
-    
-    # Run branch-and-bound algorithm to improve solution
-    x_best = x.copy()
-    branch_and_bound(0, z, weights.sum(), capacities)
-    x = x_best
-    
-    return x, z
-
-def knapsack(pool_class = 1):
-    loans = [] # len 50
-    n = len(loans)
+# def create_pool(maturity_date, loan_term, curr_state, loans_in_pool):
+#     return []
 
 
-    for i in range(n):
-        for i2 in range(len(loans)):
-            # does loan[i2] fit in pool 1?
-            pass
+def gen_datastructure():
+    categories = {
+        "1": {},
+        "2": {},
+        "3": {},
+        "4": {},
+        "5": {},
+        "6": {},
+        "7": {},
+        "8": {},
+        "9": {},
+        "10": {}
+    }
 
-    pass
+    df = pd.read_csv('fnma-dataset-classified.txt', sep='|')
+
+    # first pass (create initial categories)
+    for _, row in df.iterrows():
+        if pd.notna(row['classes']):
+            row_list = list(row)
+            classes = row['classes'].split(',')
+            try:
+                key = f"{str(int(row['maturity_date']))}-{str(row['loan_term'])}"
+                if (len(classes) > 1):
+                    row_list[-1] = ",".join(classes[1:])
+                elif(len(classes) == 1):
+                    row_list[-1] = ""
+
+                if categories.get(key) is None:
+                    categories[classes[0]][key] = [row_list]
+                else:
+                    categories[classes[0]][key].append(row_list)
+            except:
+                pass
+
+    with open('categories.json', 'w') as file:
+        json.dump(categories, file)
+
+def knapsack():
+    categories = {}
+
+    pools = []
+
+    max_size = [20, 20, 20, 20, 20, 30, 30, 40, 40, 40]
+    state_pct = [0.05, 0.05, 0.1, 0.05, 0.05, 0.15, 0.05, 0.05, 0.25]
+
+    with open('categories.json', 'r') as file:
+        categories = json.load(file)
+
+    print(categories.keys())
+    for pclass in range(1, 10):
+        for k, v in categories[str(pclass)].items():
+            # for each v -> array of loans --> run the alg
+            # if enough loans
+
+            cat = categories[str(pclass)][k]
+
+            if (pclass == 1 or pclass == 2 or pclass == 4 or pclass == 5 or pclass == 7 or pclass == 8 or pclass == 9) and len(cat) <= 20:
+                # redistribute
+                pass
+            elif pclass == 3 and len(cat) <= 10:
+                # redistribute
+                pass
+            elif pclass == 6 and len(cat) <= 7:
+                # redistribute
+                pass
+            elif pclass == 10 and len(cat) <= 4:
+                # redistribute
+                pass
+
+            # algorithm here:
+
+            # pool = [class, key (maturity_date, loan_term), curr_balance, curr_states_set, loans_in_pool)]
+
+            pool = [pclass, k, 0, dict(), []]
+            for loan in v:
+                # print(loan)
+
+                # pool size check
+                if pool[2] + loan[1] <= max_size[pclass-1]:
+                    # state % check 
+                    if (pool[3].get(loan[-2], 0) + 1) / len(pool[4]) <= state_pct[pclass-1]:
+                        pool[2] += loan[1]
+                        pool[3][loan[-2]] = pool[3].get(loan[-2], 0) + 1
+                        pool[4].append(loan)
+                    else:
+                        # redistribute
+                        pass
+                
+                else:
+                    # redistribute
+                    pass
+
+
+    # optimize categories:
+    # flag = False
+    # while not flag:
+    #     updated = False
+    #     for k in categories.keys():
+
+    #         pclass = k.split('-')[0]
+
+    #         # max 5%
+    #         if (pclass == 1 or pclass == 2 or pclass == 4 or pclass == 5 or pclass == 7 or pclass == 8 or pclass == 9) and len(categories[k]) >= 20:
+    #             pass
+    #         elif pclass == 3 and len(categories[k]) >= 10:
+    #             pass
+    #         elif pclass == 6 and len(categories[k]) >= 7:
+    #             pass
+    #         elif pclass == 10 and len(categories[k]) >= 4:
+    #             pass
+
+    #         updated = True
+
+    #         for loan in categories[k]:
+    #             # redistribute the loan
+    #             classes = loan[-1].split(',')
+    #             key = f"{str(classes[0])}-{str(int(row['maturity_date']))}-{str(row['loan_term'])}"
+
+    #     if updated:
+    #         flag = True
+
+    # DEBUG: prints
+    # print(categories)
+    # for k in categories.keys():
+    #     print(f"{k}: {len(categories[k])}")
+
+    # print(df.head())
+
 
 if __name__ == '__main__':
-    # knapsack(1)
-
-    knapsack(1)
-
-    # pass
+    # only run once. (comment out when not in use)
+    # gen_datastructure()
+    # knapsack()

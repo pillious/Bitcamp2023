@@ -21,3 +21,5 @@ ohe_df = pd.DataFrame(ohe, columns=cols)
 print(ohe_df.head())
 for col in cols:
     print(ohe_df[col].value_counts())
+
+print(df["state"].value_counts())
