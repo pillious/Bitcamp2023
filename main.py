@@ -85,6 +85,10 @@ def knapsack():
 
     for pclass in range(1, 11):
         for k, v in list(categories[str(pclass)].items()):
+            for loan in v:
+                if loan[-2].isdigit():
+                    loan.pop(-2)
+
             # for each v -> array of loans --> run the alg
             # if enough loans
 
@@ -111,7 +115,6 @@ def knapsack():
                             categories[clses[0]][k] = [loan]
                         # Key already exists, so add to the value list
                         else:
-                            # print(clses)
                             categories[clses[0]][k].append(loan)
 
                 # Remove the category from the original pool class
@@ -251,15 +254,14 @@ def knapsack():
 
     # follow output guidelines
     for pool in pools:
-        print(pool[4])
         count = file_idx[pool[0]-1]
         file_idx[pool[0]-1] += 1
         with open(f"output/pool-{pool[0]}-{count}.txt", "w", encoding="UTF-8") as file:
             writer = csv.writer(file, delimiter='|')
             writer.writerow(["loan_id", "upb", "note_rate", "borrower_fico", "coborrower_fico",
                             "combined_fico", "state", "dti", "ltv", "maturity_date", "loan_term", "property_type"])
-            for ele in pool[4]:
-                del ele[-1]
+            for i, l in enumerate(pool[4]):
+                pool[4][i] = l[:12]
             writer.writerows(pool[4])
 
 
