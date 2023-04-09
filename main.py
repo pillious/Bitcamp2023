@@ -44,7 +44,7 @@ def gen_datastructure():
                     categories[classes[0]][key].append(row_list)
             except:
                 # occurs when maturity date is nan
-                pass
+                continue
     print("DONE... dumping to file...")
 
     with open('categories.json', 'w') as file:
@@ -66,13 +66,12 @@ def knapsack():
         for k, v in list(categories[str(pclass)].items()):
             # for each v -> array of loans --> run the alg
             # if enough loans
-            cat = categories[str(pclass)][k]
 
             if (
                 ((pclass == 1 or pclass == 2 or pclass == 4 or pclass ==
-                 5 or pclass == 7 or pclass == 8 or pclass == 9) and len(cat) <= 20)
-                or (pclass == 3 and len(cat) <= 10)
-                or (pclass == 6 and len(cat) <= 7)
+                 5 or pclass == 7 or pclass == 8 or pclass == 9) and len(v) < 20)
+                or (pclass == 3 and len(v) < 10)
+                or (pclass == 6 and len(v) < 7)
             ):
                 # redistribute
                 for loan in v:
@@ -97,62 +96,56 @@ def knapsack():
 
                 # Remove the category from the original pool class
                 del categories[str(pclass)][k]
-            elif pclass == 10 and len(cat) <= 4:
+                continue
+            elif pclass == 10 and len(v) <= 4:
                 # not possible to redistribute anymore, just remove from original pool class
                 del categories[str(pclass)][k]
-                pass
+                continue
+            else:
+                # algorithm here:
+                # pool = [class, key (maturity_date, loan_term), curr_balance, curr_states_set, loans_in_pool)]
 
-            # algorithm here:
-            # pool = [class, key (maturity_date, loan_term), curr_balance, curr_states_set, loans_in_pool)]
+                pool = [pclass, k, 0, dict(), []]
+                # sset = set()
 
-            pool = [pclass, k, 0, dict(), []]
-            sset = set()
+                # TODO: make it work for all pools
+                if len(v) < 20:
+                    continue
 
-            # TODO: make it work for all pools
-            if len(v) < 20:
-                pass
+                states = {} # dict from state to list of loans
 
-            states = {} # dict from state to list of loans
+                # For a loan in a category, v, of (classes, maturity_date, and loan_term)
+                for loan in v:
+                    if states.get(loan[6]) is None:
+                        states[loan[6]] = [loan]
+                    else:
+                        states[loan[6]].append(loan)
 
-            # For a loan in a category, v, of (classes, maturity_date, and loan_term)
-            for loan in v:
-                if states.get(loan[6]) is None:
-                    states[loan[6]] = [loan]
-                else:
-                    states[loan[6]].append(loan)
+                min_state_loans = 100000
+                if len(states.keys()) < 20:
+                    continue
 
-            min_state_loans = 100000
-            if len(states.keys()) >= 20:
                 for state in states.keys():
                     # sort loans by loan amount
                     states[state].sort(key=lambda x: x[1], reverse=True)
                     if len(states[state]) < min_state_loans:
                         min_state_loans = len(states[state])
 
-            while min_state_loans > 0:
-                for state in states.keys():
-                    if len(states[state]) > 0:
-                        pool[2] += states[state][0][1]
-                        pool[3][state] = pool[3].get(state, 0) + 1
-                        pool[4].append(states[state][0])
-                        states[state].pop(0)
-                min_state_loans -= 1
+                while min_state_loans > 0:
+                    for state in states.keys():
+                        if len(states[state]) > 0:
+                            pool[2] += states[state][0][1]
+                            pool[3][state] = pool[3].get(state, 0) + 1
+                            pool[4].append(states[state][0])
+                            states[state].pop(0)
+                    min_state_loans -= 1
 
-            pools.append(pool)
+                # if len(pool[4]) >= 20:
+                #     pools.append(pool)
+                # else:
+                #     print(pool[4])
 
-            """
-            dict of states --> list of loans sorted
-            keep track of number of states LATER
-            keep track of min number of loans out of all states
-            
-            if at least 20 states in dict:
-            while min number of loans > 0
-                for each state, add max loan
-                min number of loans --
-                
-            
-            """
-
+                pools.append(pool)
 
 
                 # pool size check
