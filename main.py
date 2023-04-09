@@ -19,7 +19,9 @@ def gen_datastructure():
     }
 
     df = pd.read_csv('fnma-dataset-classified.txt', sep='|')
+    # df = pd.read_csv('fnma-dataset-classified2.txt', sep='|')
 
+    print("START ITER")
     # first pass (create initial categories)
     for _, row in df.iterrows():
         # Checks if row classes is NaN
@@ -43,14 +45,10 @@ def gen_datastructure():
             except:
                 # occurs when maturity date is nan
                 pass
+    print("DONE... dumping to file...")
 
-    count = 0
-    for k in categories["1"]:
-        count += len(categories["1"][k])
-    print(count)
-
-    # with open('categories.json', 'w') as file:
-        # json.dump(categories, file)
+    with open('categories.json', 'w') as file:
+        json.dump(categories, file)
 
 
 def knapsack():
@@ -109,17 +107,62 @@ def knapsack():
 
             pool = [pclass, k, 0, dict(), []]
             sset = set()
+
+            # TODO: make it work for all pools
+            if len(v) < 20:
+                pass
+
+            states = {} # dict from state to list of loans
+
+            # For a loan in a category, v, of (classes, maturity_date, and loan_term)
             for loan in v:
+                if states.get(loan[6]) is None:
+                    states[loan[6]] = [loan]
+                else:
+                    states[loan[6]].append(loan)
+
+            min_state_loans = 100000
+            if len(states.keys()) >= 20:
+                for state in states.keys():
+                    # sort loans by loan amount
+                    states[state].sort(key=lambda x: x[1], reverse=True)
+                    if len(states[state]) < min_state_loans:
+                        min_state_loans = len(states[state])
+
+            while min_state_loans > 0:
+                for state in states.keys():
+                    if len(states[state]) > 0:
+                        pool[2] += states[state][0][1]
+                        pool[3][state] = pool[3].get(state, 0) + 1
+                        pool[4].append(states[state][0])
+                        states[state].pop(0)
+                min_state_loans -= 1
+
+            pools.append(pool)
+
+            """
+            dict of states --> list of loans sorted
+            keep track of number of states LATER
+            keep track of min number of loans out of all states
+            
+            if at least 20 states in dict:
+            while min number of loans > 0
+                for each state, add max loan
+                min number of loans --
+                
+            
+            """
+
+
+
                 # pool size check
-                # print(pool[2], loan[1], max_size[pclass-1])
                 # if pool[2] + loan[1] <= max_size[pclass-1] * MULTIPLIER:
-                    # state % check
-                if loan[-2] not in sset:
-                    sset.add(loan[-2])
-                    pool[2] += loan[1]
-                    pool[3][loan[-2]] = pool[3].get(loan[-2], 0) + 1
-                    pool[4].append(loan)
-            # print(sset)
+                #     # state % check
+                #     if loan[6] not in sset:
+                #         sset.add(loan[6])
+                #         pool[2] += loan[1]
+                #         pool[3][loan[6]] = pool[3].get(loan[6], 0) + 1
+                #         pool[4].append(loan)
 
                 # else:
                 #     # redistribute
@@ -131,13 +174,19 @@ def knapsack():
 
                     # if (pool[3].get(loan[-2], 0) + 1) / len(pool[4]) <= state_pct[pclass-1]:
 
-            pools.append(pool)
+
+            # validate pool
+            # if valid, append to pools
+            # if not valid, redistribute or skip
+
+
+
 
     # filter out pools with 0 balance
-    soln = []
-    for pool in pools:
-        if pool[2] > 0:
-            soln.append(pool)
+    # soln = []
+    # for pool in pools:
+    #     if pool[2] > 0:
+    #         soln.append(pool)
 
     # dump output for debugging
     # with open("solution.json", "w") as file:
@@ -145,9 +194,8 @@ def knapsack():
 
     # follow output guidelines
     count = 0
-    for pool in soln:
-        # if len(pool[4]):
-        # print(pool)
+    for pool in pools:
+        # num_loans = len(pool[4])
 
         with open(f"output/class{pool[0]}_{count}.txt", "w", encoding="UTF-8") as file:
             writer = csv.writer(file, delimiter='|')
@@ -196,5 +244,5 @@ def knapsack():
 
 if __name__ == '__main__':
     # only run once. (comment out when not in use)
-    gen_datastructure()
-    # knapsack()
+    # gen_datastructure()
+    knapsack()

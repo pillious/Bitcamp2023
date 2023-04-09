@@ -27,8 +27,7 @@ def read_data():
     print('Reading in data...')
     POOLS = pd.read_csv('pools.txt', sep='|')
 
-    # DATA = pd.read_csv('fnma-dataset-complete.txt', sep='|')
-    DATA = pd.read_csv('true.txt', sep='|')
+    DATA = pd.read_csv('fnma-dataset-complete.txt', sep='|')
 
     print('Done reading in data.')
 
@@ -67,8 +66,11 @@ def main():
         if DATA is not None:
             for row in DATA.iterrows():
                 row_list = row[1].tolist()
-                row_list.append(classify(row))
-                buffer.append(row_list)
+                # row_list.append(classify(row))
+                res = classify(row)
+                if res != '':
+                    row_list.append(res)
+                    buffer.append(row_list)
                 if len(buffer) >= buffer_max_rows:
                     print(f"Writing {buffer_max_rows} rows to file...")
                     writer.writerows(buffer)
