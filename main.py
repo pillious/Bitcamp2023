@@ -249,94 +249,6 @@ def knapsack():
             pool[-1] = soln
             pools.append(pool)
 
-            # if batch_bal < max_size[pclass-1] * MULTIPLIER:
-            #     # add  another batch
-            # else:
-            #     # run replacement algorithm
-
-            # while min_state_loans > 0 and pool[2] < max_size[pclass-1] * MULTIPLIER:
-            #     sum = 0
-            #     for state in states.keys():
-            #         if len(states[state]) > 0:
-            #             sum += states[state][0][1]
-
-            #     if pool[2] + sum < max_size[pclass-1] * MULTIPLIER:
-            #         for state in states.keys():
-            #             if len(states[state]) > 0:
-            #                 pool[2] += states[state][0][1]
-            #                 pool[3][state] = pool[3].get(state, 0) + 1
-            #                 pool[4].append(states[state][0][:-1])
-            #                 states[state].pop(0)
-
-            #     min_state_loans -= 1
-
-            # end new algorihtm:
-
-            # min_state_loans = 100000
-            # if len(states.keys()) < min_state[pclass-1]:
-            #     continue
-
-            # for state in states.keys():
-            #     # sort loans by loan amount
-            #     states[state].sort(key=lambda x: x[1], reverse=True)
-            #     if len(states[state]) < min_state_loans:
-            #         min_state_loans = len(states[state])
-
-            # while min_state_loans > 0 and pool[2] < max_size[pclass-1] * MULTIPLIER:
-            #     sum = 0
-            #     for state in states.keys():
-            #         if len(states[state]) > 0:
-            #             sum += states[state][0][1]
-            #     # TODO: improve --> maybe just pop --> knapsack?
-
-            #     if pool[2] + sum < max_size[pclass-1] * MULTIPLIER:
-            #         for state in states.keys():
-            #             if len(states[state]) > 0:
-            #                 pool[2] += states[state][0][1]
-            #                 pool[3][state] = pool[3].get(state, 0) + 1
-            #                 pool[4].append(states[state][0][:-1])
-            #                 states[state].pop(0)
-
-            #     min_state_loans -= 1
-
-            # if len(pool[4]) >= 20:
-            #     pools.append(pool)
-            # else:
-            #     print(pool[4])
-
-            # pool size check
-            # if pool[2] + loan[1] <= max_size[pclass-1] * MULTIPLIER:
-            #     # state % check
-            #     if loan[6] not in sset:
-            #         sset.add(loan[6])
-            #         pool[2] += loan[1]
-            #         pool[3][loan[6]] = pool[3].get(loan[6], 0) + 1
-            #         pool[4].append(loan)
-
-            # else:
-            #     # redistribute
-            #     pass
-
-            # else:
-            #     # redistribute
-            #     pass
-
-            # if (pool[3].get(loan[-2], 0) + 1) / len(pool[4]) <= state_pct[pclass-1]:
-
-            # validate pool
-            # if valid, append to pools
-            # if not valid, redistribute or skip
-
-    # filter out pools with 0 balance
-    # soln = []
-    # for pool in pools:
-    #     if pool[2] > 0:
-    #         soln.append(pool)
-
-    # dump output for debugging
-    # with open("solution.json", "w") as file:
-    #     json.dump(soln, file)
-
     # follow output guidelines
     for pool in pools:
         print(pool[4])
@@ -349,41 +261,6 @@ def knapsack():
             for ele in pool[4]:
                 del ele[-1]
             writer.writerows(pool[4])
-
-    # optimize categories:
-    # flag = False
-    # while not flag:
-    #     updated = False
-    #     for k in categories.keys():
-
-    #         pclass = k.split('-')[0]
-
-    #         # max 5%
-    #         if (pclass == 1 or pclass == 2 or pclass == 4 or pclass == 5 or pclass == 7 or pclass == 8 or pclass == 9) and len(categories[k]) >= 20:
-    #             pass
-    #         elif pclass == 3 and len(categories[k]) >= 10:
-    #             pass
-    #         elif pclass == 6 and len(categories[k]) >= 7:
-    #             pass
-    #         elif pclass == 10 and len(categories[k]) >= 4:
-    #             pass
-
-    #         updated = True
-
-    #         for loan in categories[k]:
-    #             # redistribute the loan
-    #             classes = loan[-1].split(',')
-    #             key = f"{str(classes[0])}-{str(int(row['maturity_date']))}-{str(row['loan_term'])}"
-
-    #     if updated:
-    #         flag = True
-
-    # DEBUG: prints
-    # print(categories)
-    # for k in categories.keys():
-    #     print(f"{k}: {len(categories[k])}")
-
-    # print(df.head())
 
 
 if __name__ == '__main__':
