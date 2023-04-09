@@ -131,13 +131,21 @@ def knapsack():
                 if len(states[state]) < min_state_loans:
                     min_state_loans = len(states[state])
 
-            while min_state_loans > 0:
+            while min_state_loans > 0 and pool[2] < max_size[pclass-1] * MULTIPLIER:
+                sum = 0
                 for state in states.keys():
                     if len(states[state]) > 0:
-                        pool[2] += states[state][0][1]
-                        pool[3][state] = pool[3].get(state, 0) + 1
-                        pool[4].append(states[state][0])
-                        states[state].pop(0)
+                        sum += states[state][0][1]
+                # TODO: improve --> maybe just pop --> knapsack?
+
+                if pool[2] + sum < max_size[pclass-1] * MULTIPLIER:
+                    for state in states.keys():
+                        if len(states[state]) > 0:
+                            pool[2] += states[state][0][1]
+                            pool[3][state] = pool[3].get(state, 0) + 1
+                            pool[4].append(states[state][0][:-1])
+                            states[state].pop(0)
+                            
                 min_state_loans -= 1
 
             # if len(pool[4]) >= 20:
