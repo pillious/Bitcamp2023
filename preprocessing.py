@@ -27,8 +27,8 @@ def read_data():
     print('Reading in data...')
     POOLS = pd.read_csv('pools.txt', sep='|')
 
-    # TODO: run on the full dataset.
-    DATA = pd.read_csv('fnma-dataset-complete.txt', sep='|')
+    # DATA = pd.read_csv('fnma-dataset-complete.txt', sep='|')
+    DATA = pd.read_csv('true.txt', sep='|')
 
     print('Done reading in data.')
 
@@ -54,8 +54,6 @@ def classify(row) -> 'str':
             indices += str(i+1) + ','
 
     return indices.rstrip(',')
-
-    # return "1"
 
 
 def main():

@@ -1,41 +1,8 @@
 import json
+import csv
 import pandas as pd
 
-# EXAMPLE: Read in data from file
-# import pandas as pd
-
-# pool_df = pd.read_csv('pools.txt', sep='|')
-# data_df = pd.read_csv('fnma-dataset-00.txt', sep='|')
-
-# print(data_df.head())
-# print(pool_df)
-# ---------------------
-
-# THE GENERAL PROBLEM: multiple knapsack problem with multiple constraints:
-
-# --> Approach for multiple constraints:
-# combine the multiple constraints into a single constraint
-# http://hjemmesider.diku.dk/~pisinger/95-1.pdf (pg. 15)
-
-# --> Approach for multiple knapsacks:
-# ????
-
-###
-# LOOK AT THE OVERALL CONSTRAINTS IN THE README
-###
-
-# class Pool:
-#     def __init__(maturity_date: int, loan_term: int, curr_states, loans_in_pool = []) -> None:
-#         # [pool_class, maturity date, loan term, curr balance, curr state %, loans in pool, property type*]
-#         # curr states can be an array of ints? MA/len(loans_in_pool) => pct
-#         self.maturity_date = maturity_date
-#         self.loan_term = loan_term
-#         self.curr_state_pct = curr_state_pct
-#         self.loans_in_pool = loans_in_pool
-
-# def create_pool(maturity_date, loan_term, curr_state, loans_in_pool):
-#     return []
-
+MULTIPLIER = 1000000
 
 def gen_datastructure():
     categories = {
@@ -55,25 +22,36 @@ def gen_datastructure():
 
     # first pass (create initial categories)
     for _, row in df.iterrows():
+        # Checks if row classes is NaN
         if pd.notna(row['classes']):
             row_list = list(row)
             classes = row['classes'].split(',')
             try:
                 key = f"{str(int(row['maturity_date']))}-{str(row['loan_term'])}"
+
                 if (len(classes) > 1):
                     row_list[-1] = ",".join(classes[1:])
                 elif(len(classes) == 1):
                     row_list[-1] = ""
+                else:
+                    raise Exception("Invalid classes")
 
-                if categories.get(key) is None:
+                if categories[classes[0]].get(key) is None:
                     categories[classes[0]][key] = [row_list]
                 else:
                     categories[classes[0]][key].append(row_list)
             except:
+                # occurs when maturity date is nan
                 pass
 
-    with open('categories.json', 'w') as file:
-        json.dump(categories, file)
+    count = 0
+    for k in categories["1"]:
+        count += len(categories["1"][k])
+    print(count)
+
+    # with open('categories.json', 'w') as file:
+        # json.dump(categories, file)
+
 
 def knapsack():
     categories = {}
@@ -86,50 +64,99 @@ def knapsack():
     with open('categories.json', 'r') as file:
         categories = json.load(file)
 
-    print(categories.keys())
-    for pclass in range(1, 10):
-        for k, v in categories[str(pclass)].items():
+    for pclass in range(1, 11):
+        for k, v in list(categories[str(pclass)].items()):
             # for each v -> array of loans --> run the alg
             # if enough loans
-
             cat = categories[str(pclass)][k]
 
-            if (pclass == 1 or pclass == 2 or pclass == 4 or pclass == 5 or pclass == 7 or pclass == 8 or pclass == 9) and len(cat) <= 20:
+            if (
+                ((pclass == 1 or pclass == 2 or pclass == 4 or pclass ==
+                 5 or pclass == 7 or pclass == 8 or pclass == 9) and len(cat) <= 20)
+                or (pclass == 3 and len(cat) <= 10)
+                or (pclass == 6 and len(cat) <= 7)
+            ):
                 # redistribute
-                pass
-            elif pclass == 3 and len(cat) <= 10:
-                # redistribute
-                pass
-            elif pclass == 6 and len(cat) <= 7:
-                # redistribute
-                pass
+                for loan in v:
+                    if len(loan[-1]) > 0:
+                        clses = loan[-1].split(',')
+                        new_classes = ""
+                        # If can redistribute loan, then redistributes
+                        if len(clses) > 1:
+                            new_classes = ",".join(clses[1:])
+                            loan[-1] = new_classes
+                        else:
+                            loan[-1] = new_classes
+
+
+                        # Creates new category if it doesn't exist
+                        if categories[clses[0]].get(k) is None:
+                            categories[clses[0]][k] = [loan]
+                        # Key already exists, so add to the value list
+                        else:
+                            # print(clses)
+                            categories[clses[0]][k].append(loan)
+
+                # Remove the category from the original pool class
+                del categories[str(pclass)][k]
             elif pclass == 10 and len(cat) <= 4:
-                # redistribute
+                # not possible to redistribute anymore, just remove from original pool class
+                del categories[str(pclass)][k]
                 pass
 
             # algorithm here:
-
             # pool = [class, key (maturity_date, loan_term), curr_balance, curr_states_set, loans_in_pool)]
 
             pool = [pclass, k, 0, dict(), []]
+            sset = set()
             for loan in v:
-                # print(loan)
-
                 # pool size check
-                if pool[2] + loan[1] <= max_size[pclass-1]:
-                    # state % check 
-                    if (pool[3].get(loan[-2], 0) + 1) / len(pool[4]) <= state_pct[pclass-1]:
-                        pool[2] += loan[1]
-                        pool[3][loan[-2]] = pool[3].get(loan[-2], 0) + 1
-                        pool[4].append(loan)
-                    else:
-                        # redistribute
-                        pass
-                
-                else:
-                    # redistribute
-                    pass
+                # print(pool[2], loan[1], max_size[pclass-1])
+                # if pool[2] + loan[1] <= max_size[pclass-1] * MULTIPLIER:
+                    # state % check
+                if loan[-2] not in sset:
+                    sset.add(loan[-2])
+                    pool[2] += loan[1]
+                    pool[3][loan[-2]] = pool[3].get(loan[-2], 0) + 1
+                    pool[4].append(loan)
+            # print(sset)
 
+                # else:
+                #     # redistribute
+                #     pass
+
+                # else:
+                #     # redistribute
+                #     pass
+
+                    # if (pool[3].get(loan[-2], 0) + 1) / len(pool[4]) <= state_pct[pclass-1]:
+
+            pools.append(pool)
+
+    # filter out pools with 0 balance
+    soln = []
+    for pool in pools:
+        if pool[2] > 0:
+            soln.append(pool)
+
+    # dump output for debugging
+    # with open("solution.json", "w") as file:
+    #     json.dump(soln, file)
+
+    # follow output guidelines
+    count = 0
+    for pool in soln:
+        # if len(pool[4]):
+        # print(pool)
+
+        with open(f"output/class{pool[0]}_{count}.txt", "w", encoding="UTF-8") as file:
+            writer = csv.writer(file, delimiter='|')
+            writer.writerow(["loan_id", "upb", "note_rate", "borrower_fico", "coborrower_fico",
+                            "combined_fico", "state", "dti", "ltv", "maturity_date", "loan_term", "property_type"])
+            for ele in pool[4]:
+                del ele[-1]
+            writer.writerows(pool[4])
+        count += 1
 
     # optimize categories:
     # flag = False
@@ -169,5 +196,5 @@ def knapsack():
 
 if __name__ == '__main__':
     # only run once. (comment out when not in use)
-    # gen_datastructure()
+    gen_datastructure()
     # knapsack()

@@ -22,4 +22,12 @@ print(ohe_df.head())
 for col in cols:
     print(ohe_df[col].value_counts())
 
-print(df["state"].value_counts())
+# -----------------------------
+
+# import os
+
+# for filename in os.listdir(os.getcwd() + "/output"):
+#     df = pd.read_csv(os.path.join("output/" + filename), sep='|')
+#     if len(df.index) > 5:
+#         print(f"{len(df)} {filename}")
+      
